@@ -26,7 +26,7 @@ class Twig_Tests_Node_Expression_FilterTest extends Twig_Test_NodeTestCase
     public function getTests()
     {
         $environment = new Twig_Environment($this->getMock('Twig_LoaderInterface'));
-        $environment->addFilter(new Twig_SimpleFilter('bar', 'twig_tests_filter_dummy', array('needs_environment' => true)));
+        $environment->addFilter(new Twig_SimpleFilter('bar', 'bar', array('needs_environment' => true)));
         $environment->addFilter(new Twig_SimpleFilter('barbar', 'twig_tests_filter_barbar', array('needs_context' => true, 'is_variadic' => true)));
 
         $tests = array();
@@ -68,15 +68,17 @@ class Twig_Tests_Node_Expression_FilterTest extends Twig_Test_NodeTestCase
         $tests[] = array($node, 'twig_reverse_filter($this->env, "abc", true)');
 
         // filter as an anonymous function
-        $node = $this->createFilter(new Twig_Node_Expression_Constant('foo', 1), 'anonymous');
-        $tests[] = array($node, 'call_user_func_array($this->env->getFilter(\'anonymous\')->getCallable(), array("foo"))');
+        if (PHP_VERSION_ID >= 50300) {
+            $node = $this->createFilter(new Twig_Node_Expression_Constant('foo', 1), 'anonymous');
+            $tests[] = array($node, 'call_user_func_array($this->env->getFilter(\'anonymous\')->getCallable(), array("foo"))');
+        }
 
         // needs environment
         $node = $this->createFilter($string, 'bar');
-        $tests[] = array($node, 'twig_tests_filter_dummy($this->env, "abc")', $environment);
+        $tests[] = array($node, 'bar($this->env, "abc")', $environment);
 
         $node = $this->createFilter($string, 'bar', array(new Twig_Node_Expression_Constant('bar', 1)));
-        $tests[] = array($node, 'twig_tests_filter_dummy($this->env, "abc", "bar")', $environment);
+        $tests[] = array($node, 'bar($this->env, "abc", "bar")', $environment);
 
         // arbitrary named arguments
         $node = $this->createFilter($string, 'barbar');
@@ -139,15 +141,12 @@ class Twig_Tests_Node_Expression_FilterTest extends Twig_Test_NodeTestCase
 
     protected function getEnvironment()
     {
-        $env = new Twig_Environment(new Twig_Loader_Array(array()));
-        $env->addFilter(new Twig_Filter('anonymous', function () {}));
+        if (PHP_VERSION_ID >= 50300) {
+            return include 'PHP53/FilterInclude.php';
+        }
 
-        return $env;
+        return parent::getEnvironment();
     }
-}
-
-function twig_tests_filter_dummy()
-{
 }
 
 function twig_tests_filter_barbar($context, $string, $arg1 = null, $arg2 = null, array $args = array())

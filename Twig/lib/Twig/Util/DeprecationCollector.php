@@ -15,6 +15,7 @@
 class Twig_Util_DeprecationCollector
 {
     private $twig;
+    private $deprecations;
 
     public function __construct(Twig_Environment $twig)
     {
@@ -49,12 +50,9 @@ class Twig_Util_DeprecationCollector
      */
     public function collect(Iterator $iterator)
     {
-        $deprecations = array();
-        set_error_handler(function($type, $msg) use (&$deprecations) {
-            if (E_USER_DEPRECATED === $type) {
-                $deprecations[] = $msg;
-            }
-        });
+        $this->deprecations = array();
+
+        set_error_handler(array($this, 'errorHandler'));
 
         foreach ($iterator as $name => $contents) {
             try {
@@ -66,6 +64,19 @@ class Twig_Util_DeprecationCollector
 
         restore_error_handler();
 
+        $deprecations = $this->deprecations;
+        $this->deprecations = array();
+
         return $deprecations;
+    }
+
+    /**
+     * @internal
+     */
+    public function errorHandler($type, $msg)
+    {
+        if (E_USER_DEPRECATED === $type) {
+            $this->deprecations[] = $msg;
+        }
     }
 }

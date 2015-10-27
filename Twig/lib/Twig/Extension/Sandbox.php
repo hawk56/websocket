@@ -10,9 +10,9 @@
  */
 class Twig_Extension_Sandbox extends Twig_Extension
 {
-    private $sandboxedGlobally;
-    private $sandboxed;
-    private $policy;
+    protected $sandboxedGlobally;
+    protected $sandboxed;
+    protected $policy;
 
     public function __construct(Twig_Sandbox_SecurityPolicyInterface $policy, $sandboxed = false)
     {
@@ -23,7 +23,7 @@ class Twig_Extension_Sandbox extends Twig_Extension
     /**
      * Returns the token parser instances to add to the existing list.
      *
-     * @return array An array of Twig_TokenParserInterface instances
+     * @return array An array of Twig_TokenParserInterface or Twig_TokenParserBrokerInterface instances
      */
     public function getTokenParsers()
     {

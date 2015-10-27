@@ -1,0 +1,13 @@
+{
+    "name": "persona/websocket",
+    "authors": [
+        {
+            "name": "Persona Grata",
+            "email": "hawk_56@mail.ru"
+        }
+    ],
+    "require": {
+        "components/jquery": "^2.1",
+        "websocket/websocket": "*"
+    }
+}

@@ -15,21 +15,22 @@
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class Twig_Parser
+class Twig_Parser implements Twig_ParserInterface
 {
-    private $stack = array();
-    private $stream;
-    private $parent;
-    private $handlers;
-    private $visitors;
-    private $expressionParser;
-    private $blocks;
-    private $blockStack;
-    private $macros;
-    private $env;
-    private $importedSymbols;
-    private $traits;
-    private $embeddedTemplates = array();
+    protected $stack = array();
+    protected $stream;
+    protected $parent;
+    protected $handlers;
+    protected $visitors;
+    protected $expressionParser;
+    protected $blocks;
+    protected $blockStack;
+    protected $macros;
+    protected $env;
+    protected $reservedMacroNames;
+    protected $importedSymbols;
+    protected $traits;
+    protected $embeddedTemplates = array();
 
     /**
      * Constructor.
@@ -68,12 +69,8 @@ class Twig_Parser
 
         // tag handlers
         if (null === $this->handlers) {
-            $this->handlers = array();
-            foreach ($this->env->getTokenParsers() as $handler) {
-                $handler->setParser($this);
-
-                $this->handlers[$handler->getTag()] = $handler;
-            }
+            $this->handlers = $this->env->getTokenParsers();
+            $this->handlers->setParser($this);
         }
 
         // node visitors
@@ -154,7 +151,7 @@ class Twig_Parser
                         throw new Twig_Error_Syntax('A block must start with a tag name', $token->getLine(), $this->getFilename());
                     }
 
-                    if (null !== $test && $test($token)) {
+                    if (null !== $test && call_user_func($test, $token)) {
                         if ($dropNeedle) {
                             $this->stream->next();
                         }
@@ -166,7 +163,8 @@ class Twig_Parser
                         return new Twig_Node($rv, array(), $lineno);
                     }
 
-                    if (!isset($this->handlers[$token->getValue()])) {
+                    $subparser = $this->handlers->getTokenParser($token->getValue());
+                    if (null === $subparser) {
                         if (null !== $test) {
                             $error = sprintf('Unexpected tag name "%s"', $token->getValue());
                             if (is_array($test) && isset($test[0]) && $test[0] instanceof Twig_TokenParserInterface) {
@@ -176,17 +174,14 @@ class Twig_Parser
                             throw new Twig_Error_Syntax($error, $token->getLine(), $this->getFilename());
                         }
 
-                        $message = sprintf('Unknown tag name "%s"', $token->getValue());
-                        if ($alternatives = $this->env->computeAlternatives($token->getValue(), array_keys($this->env->getTags()))) {
-                            $message = sprintf('%s. Did you mean "%s"', $message, implode('", "', $alternatives));
-                        }
+                        $e = new Twig_Error_Syntax(sprintf('Unknown "%s" tag.', $token->getValue()), $token->getLine(), $this->getFilename());
+                        $e->addMessageSuggestions($token->getValue(), array_keys($this->env->getTags()));
 
-                        throw new Twig_Error_Syntax($message, $token->getLine(), $this->getFilename());
+                        throw $e;
                     }
 
                     $this->stream->next();
 
-                    $subparser = $this->handlers[$token->getValue()];
                     $node = $subparser->parse($token);
                     if (null !== $node) {
                         $rv[] = $node;
@@ -257,17 +252,28 @@ class Twig_Parser
 
     public function setMacro($name, Twig_Node_Macro $node)
     {
+        if ($this->isReservedMacroName($name)) {
+            throw new Twig_Error_Syntax(sprintf('"%s" cannot be used as a macro name as it is a reserved keyword', $name), $node->getLine(), $this->getFilename());
+        }
+
         $this->macros[$name] = $node;
     }
 
-    /**
-     * @deprecated since 2.0. Will be removed in 3.0. There is no reserved macro names anymore
-     */
     public function isReservedMacroName($name)
     {
-        @trigger_error('The '.__METHOD__.' method is deprecated since version 2.0 and will be removed in 3.0.', E_USER_DEPRECATED);
+        if (null === $this->reservedMacroNames) {
+            $this->reservedMacroNames = array();
+            $r = new ReflectionClass($this->env->getBaseTemplateClass());
+            foreach ($r->getMethods() as $method) {
+                $methodName = strtolower($method->getName());
 
-        return false;
+                if ('get' === substr($methodName, 0, 3) && isset($methodName[3])) {
+                    $this->reservedMacroNames[] = substr($methodName, 3);
+                }
+            }
+        }
+
+        return in_array(strtolower($name), $this->reservedMacroNames);
     }
 
     public function addTrait($trait)
@@ -356,7 +362,7 @@ class Twig_Parser
         return $this->stream->getCurrent();
     }
 
-    private function filterBodyNodes(Twig_Node $node)
+    protected function filterBodyNodes(Twig_NodeInterface $node)
     {
         // check that the body does not contain non-empty output nodes
         if (

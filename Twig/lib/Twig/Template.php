@@ -15,12 +15,8 @@
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-abstract class Twig_Template
+abstract class Twig_Template implements Twig_TemplateInterface
 {
-    const ANY_CALL = 'any';
-    const ARRAY_CALL = 'array';
-    const METHOD_CALL = 'method';
-
     protected static $cache = array();
 
     protected $parent;
@@ -47,6 +43,16 @@ abstract class Twig_Template
     abstract public function getTemplateName();
 
     /**
+     * @deprecated since 1.20 (to be removed in 2.0)
+     */
+    public function getEnvironment()
+    {
+        @trigger_error('The '.__METHOD__.' method is deprecated since version 1.20 and will be removed in 2.0.', E_USER_DEPRECATED);
+
+        return $this->env;
+    }
+
+    /**
      * Returns the parent template.
      *
      * This method is for internal use only and should never be called
@@ -54,7 +60,7 @@ abstract class Twig_Template
      *
      * @param array $context
      *
-     * @return Twig_Template|false The parent template or false if there is no parent
+     * @return Twig_TemplateInterface|false The parent template or false if there is no parent
      *
      * @internal
      */
@@ -112,6 +118,8 @@ abstract class Twig_Template
      */
     public function displayParentBlock($name, array $context, array $blocks = array())
     {
+        $name = (string) $name;
+
         if (isset($this->traits[$name])) {
             $this->traits[$name][0]->displayBlock($name, $context, $blocks, false);
         } elseif (false !== $parent = $this->getParent($context)) {
@@ -136,6 +144,8 @@ abstract class Twig_Template
      */
     public function displayBlock($name, array $context, array $blocks = array(), $useBlocks = true)
     {
+        $name = (string) $name;
+
         if ($useBlocks && isset($blocks[$name])) {
             $template = $blocks[$name][0];
             $block = $blocks[$name][1];
@@ -242,7 +252,7 @@ abstract class Twig_Template
      */
     public function hasBlock($name)
     {
-        return isset($this->blocks[$name]);
+        return isset($this->blocks[(string) $name]);
     }
 
     /**
@@ -396,12 +406,19 @@ abstract class Twig_Template
     abstract protected function doDisplay(array $context, array $blocks = array());
 
     /**
-     * Throws an exception for an unknown variable.
+     * Returns a variable from the context.
      *
      * This method is for internal use only and should never be called
      * directly.
      *
-     * This is an implementation detail due to a PHP limitation before version 7.0.
+     * This method should not be overridden in a sub-class as this is an
+     * implementation detail that has been introduced to optimize variable
+     * access for versions of PHP before 5.4. This is not a way to override
+     * the way to get a variable value.
+     *
+     * @param array  $context           The context
+     * @param string $item              The variable to return from the context
+     * @param bool   $ignoreStrictCheck Whether to ignore the strict variable check or not
      *
      * @return mixed The content of the context variable
      *
@@ -409,9 +426,17 @@ abstract class Twig_Template
      *
      * @internal
      */
-    final protected function notFound($name, $line)
+    final protected function getContext($context, $item, $ignoreStrictCheck = false)
     {
-        throw new Twig_Error_Runtime(sprintf('Variable "%s" does not exist', $name), $line, $this->getTemplateName());
+        if (!array_key_exists($item, $context)) {
+            if ($ignoreStrictCheck || !$this->env->isStrictVariables()) {
+                return;
+            }
+
+            throw new Twig_Error_Runtime(sprintf('Variable "%s" does not exist', $item), -1, $this->getTemplateName());
+        }
+
+        return $context[$item];
     }
 
     /**
@@ -522,7 +547,12 @@ abstract class Twig_Template
                 $methods = array();
 
                 foreach ($ref->getMethods(ReflectionMethod::IS_PUBLIC) as $refMethod) {
-                    $methods[strtolower($refMethod->name)] = true;
+                    $methodName = strtolower($refMethod->name);
+
+                    // Accessing the environment from templates is forbidden to prevent untrusted changes to the environment
+                    if ('getenvironment' !== $methodName) {
+                        $methods[$methodName] = true;
+                    }
                 }
 
                 self::$cache[$class]['methods'] = $methods;
@@ -575,7 +605,7 @@ abstract class Twig_Template
 
         // useful when calling a template method from a template
         // this is not supported but unfortunately heavily used in the Symfony profiler
-        if ($object instanceof self) {
+        if ($object instanceof Twig_TemplateInterface) {
             return $ret === '' ? '' : new Twig_Markup($ret, $this->env->getCharset());
         }
 

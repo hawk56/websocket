@@ -10,7 +10,7 @@
  */
 class Twig_Extension_Optimizer extends Twig_Extension
 {
-    private $optimizers;
+    protected $optimizers;
 
     public function __construct($optimizers = -1)
     {

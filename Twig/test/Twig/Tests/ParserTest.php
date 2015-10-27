@@ -11,8 +11,17 @@
 class Twig_Tests_ParserTest extends PHPUnit_Framework_TestCase
 {
     /**
+     * @expectedException Twig_Error_Syntax
+     */
+    public function testSetMacroThrowsExceptionOnReservedMethods()
+    {
+        $parser = $this->getParser();
+        $parser->setMacro('parent', $this->getMock('Twig_Node_Macro', array(), array(), '', null));
+    }
+
+    /**
      * @expectedException        Twig_Error_Syntax
-     * @expectedExceptionMessage Unknown tag name "foo". Did you mean "for" at line 1
+     * @expectedExceptionMessage Unknown "foo" tag. Did you mean "for" at line 1?
      */
     public function testUnknownTag()
     {
@@ -27,15 +36,29 @@ class Twig_Tests_ParserTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException        Twig_Error_Syntax
+     * @expectedExceptionMessage Unknown "foobar" tag at line 1.
+     */
+    public function testUnknownTagWithoutSuggestions()
+    {
+        $stream = new Twig_TokenStream(array(
+            new Twig_Token(Twig_Token::BLOCK_START_TYPE, '', 1),
+            new Twig_Token(Twig_Token::NAME_TYPE, 'foobar', 1),
+            new Twig_Token(Twig_Token::BLOCK_END_TYPE, '', 1),
+            new Twig_Token(Twig_Token::EOF_TYPE, '', 1),
+        ));
+        $parser = new Twig_Parser(new Twig_Environment($this->getMock('Twig_LoaderInterface')));
+        $parser->parse($stream);
+    }
+
+    /**
      * @dataProvider getFilterBodyNodesData
      */
     public function testFilterBodyNodes($input, $expected)
     {
         $parser = $this->getParser();
-        $m = new ReflectionMethod($parser, 'filterBodyNodes');
-        $m->setAccessible(true);
 
-        $this->assertEquals($expected, $m->invoke($parser, $input));
+        $this->assertEquals($expected, $parser->filterBodyNodes($input));
     }
 
     public function getFilterBodyNodesData()
@@ -64,10 +87,7 @@ class Twig_Tests_ParserTest extends PHPUnit_Framework_TestCase
     {
         $parser = $this->getParser();
 
-        $m = new ReflectionMethod($parser, 'filterBodyNodes');
-        $m->setAccessible(true);
-
-        $m->invoke($parser, $input);
+        $parser->filterBodyNodes($input);
     }
 
     public function getFilterBodyNodesDataThrowsException()
@@ -85,10 +105,7 @@ class Twig_Tests_ParserTest extends PHPUnit_Framework_TestCase
     public function testFilterBodyNodesWithBOM()
     {
         $parser = $this->getParser();
-
-        $m = new ReflectionMethod($parser, 'filterBodyNodes');
-        $m->setAccessible(true);
-        $m->invoke($parser, new Twig_Node_Text(chr(0xEF).chr(0xBB).chr(0xBF), 1));
+        $parser->filterBodyNodes(new Twig_Node_Text(chr(0xEF).chr(0xBB).chr(0xBF), 1));
     }
 
     public function testParseIsReentrant()
@@ -136,13 +153,21 @@ EOF
 
     protected function getParser()
     {
-        $parser = new Twig_Parser(new Twig_Environment($this->getMock('Twig_LoaderInterface')));
+        $parser = new TestParser(new Twig_Environment($this->getMock('Twig_LoaderInterface')));
         $parser->setParent(new Twig_Node());
-        $p = new ReflectionProperty($parser, 'stream');
-        $p->setAccessible(true);
-        $p->setValue($parser, $this->getMockBuilder('Twig_TokenStream')->disableOriginalConstructor()->getMock());
+        $parser->stream = $this->getMockBuilder('Twig_TokenStream')->disableOriginalConstructor()->getMock();
 
         return $parser;
+    }
+}
+
+class TestParser extends Twig_Parser
+{
+    public $stream;
+
+    public function filterBodyNodes(Twig_NodeInterface $node)
+    {
+        return parent::filterBodyNodes($node);
     }
 }
 
