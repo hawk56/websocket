@@ -2,9 +2,13 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/.htaccess" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/class/Auth.php" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/class/DB.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/index.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/js/script.js" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/templates/auth.html.twig" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/templates/books.html.twig" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/templates/header.html.twig" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/ws.php" charset="UTF-8" />
   </component>
 </project>

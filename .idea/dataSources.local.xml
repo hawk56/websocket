@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="MySQL - websocket@localhost" uuid="1d034e2a-9568-4c82-8f47-3a14dc508d76">
+      <secret-storage>master_key</secret-storage>
+      <user-name>admin</user-name>
+      <schema-pattern>websocket.*</schema-pattern>
+      <default-schemas>websocket.*</default-schemas>
+    </data-source>
+  </component>
+</project>

@@ -1,7 +1,7 @@
 <?php
 
-/* books.html.twig */
-class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811a16a5 extends Twig_Template
+/* auth.html.twig */
+class __TwigTemplate_f8eb28e6c12a35507f38ca44cca5fe18c612a947fe9a1a4ad1806dae0b1f431f extends Twig_Template
 {
     public function __construct(Twig_Environment $env)
     {
@@ -16,20 +16,9 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
     protected function doDisplay(array $context, array $blocks = array())
     {
         // line 1
-        echo "<!doctype html>
-<html lang=\"ru\">
-<head>
-    <meta charset=\"UTF-8\">
-    <title>Document</title>
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-
-    <link rel=\"stylesheet\" href=\"css/bootstrap.css\">
-    <link rel=\"stylesheet\" href=\"css/style.css\">
-    <script src=\"vendor/components/jquery/jquery.min.js\"></script>
-    <script src=\"js/bootstrap.min.js\"></script>
-    <script src=\"js/script.js\"></script>
-</head>
-<body>
+        $this->loadTemplate("header.html.twig", "auth.html.twig", 1)->display($context);
+        // line 2
+        echo "
 <style type=\"text/css\">
     <!--
     .chat_wrapper {
@@ -57,21 +46,17 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
     -->
 </style>
 
-";
-        // line 42
-        $this->loadTemplate("header.html.twig", "books.html.twig", 42)->display($context);
-        // line 43
-        echo "<div class=\"container-fluid\">
+<div class=\"container-fluid\">
     <div class=\"row\">
         <div class=\"col-md-2\">
             <p>Список пользователей</p>
             <ul class=\"userList\">
                 ";
-        // line 48
+        // line 35
         $context['_parent'] = $context;
         $context['_seq'] = twig_ensure_traversable((isset($context["users"]) ? $context["users"] : null));
         foreach ($context['_seq'] as $context["_key"] => $context["user"]) {
-            // line 49
+            // line 36
             echo "                    <li id=\"list_user_id_";
             echo twig_escape_filter($this->env, $this->getAttribute($context["user"], "id", array()), "html", null, true);
             echo "\" data-id=\"";
@@ -84,7 +69,7 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_iterated'], $context['_key'], $context['user'], $context['_parent'], $context['loop']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 51
+        // line 38
         echo "            </ul>
         </div>
         <div class=\"col-md-10\">
@@ -96,12 +81,12 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
 
 
 ";
-        // line 62
+        // line 49
         echo "    <div class=\"container-fluid\">
         <div class=\"row\">
             <div class=\"col-md-2\">
                 user: <div id=\"user_name\" data-id=\"";
-        // line 65
+        // line 52
         echo twig_escape_filter($this->env, (isset($context["id"]) ? $context["id"] : null), "html", null, true);
         echo "\">";
         echo twig_escape_filter($this->env, (isset($context["name"]) ? $context["name"] : null), "html", null, true);
@@ -117,7 +102,7 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
                         <div class=\"row\">
                             <div class=\"col-md-3\">
                                 <input class=\"form-control\" type=\"text\" name=\"name\" id=\"name\" placeholder=\"Your Name\" value=\"";
-        // line 76
+        // line 63
         echo twig_escape_filter($this->env, (isset($context["name"]) ? $context["name"] : null), "html", null, true);
         echo "\" maxlength=\"10\" disabled/>
                             </div>
@@ -125,11 +110,11 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
                                 <select class=\"form-control\" id=\"users_list\">
                                     <option value=\"0\" selected>Всем</option>
                                     ";
-        // line 81
+        // line 68
         $context['_parent'] = $context;
         $context['_seq'] = twig_ensure_traversable((isset($context["users"]) ? $context["users"] : null));
         foreach ($context['_seq'] as $context["_key"] => $context["user"]) {
-            // line 82
+            // line 69
             echo "                                        <option value=\"";
             echo twig_escape_filter($this->env, $this->getAttribute($context["user"], "id", array()), "html", null, true);
             echo "\">";
@@ -140,7 +125,7 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_iterated'], $context['_key'], $context['user'], $context['_parent'], $context['loop']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 84
+        // line 71
         echo "                                </select>
                             </div>
                             <div class=\"col-md-4\">
@@ -163,7 +148,7 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
 
     public function getTemplateName()
     {
-        return "books.html.twig";
+        return "auth.html.twig";
     }
 
     public function isTraitable()
@@ -173,23 +158,11 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
 
     public function getDebugInfo()
     {
-        return array (  144 => 84,  133 => 82,  129 => 81,  121 => 76,  105 => 65,  100 => 62,  88 => 51,  75 => 49,  71 => 48,  64 => 43,  62 => 42,  19 => 1,);
+        return array (  129 => 71,  118 => 69,  114 => 68,  106 => 63,  90 => 52,  85 => 49,  73 => 38,  60 => 36,  56 => 35,  21 => 2,  19 => 1,);
     }
 }
-/* <!doctype html>*/
-/* <html lang="ru">*/
-/* <head>*/
-/*     <meta charset="UTF-8">*/
-/*     <title>Document</title>*/
-/*     <meta name="viewport" content="width=device-width, initial-scale=1">*/
+/* {% include 'header.html.twig' %}*/
 /* */
-/*     <link rel="stylesheet" href="css/bootstrap.css">*/
-/*     <link rel="stylesheet" href="css/style.css">*/
-/*     <script src="vendor/components/jquery/jquery.min.js"></script>*/
-/*     <script src="js/bootstrap.min.js"></script>*/
-/*     <script src="js/script.js"></script>*/
-/* </head>*/
-/* <body>*/
 /* <style type="text/css">*/
 /*     <!--*/
 /*     .chat_wrapper {*/
@@ -217,7 +190,6 @@ class __TwigTemplate_e36a319d48554db1f982fe36ccc276dcff4a720dd629b732ea3b7a44811
 /*     -->*/
 /* </style>*/
 /* */
-/* {% include 'header.html.twig' %}*/
 /* <div class="container-fluid">*/
 /*     <div class="row">*/
 /*         <div class="col-md-2">*/

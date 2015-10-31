@@ -1,0 +1,36 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+.userList {
+    list-style: none;
+}
+    .userList li {
+        padding: 3px 10px;
+        border-radius: 8px;
+    }
+    .userList li:hover {
+        background-color: #b2dba1;
+        cursor: pointer;
+    }
+    .userList li.active {
+        padding: 3px 10px;
+        border-radius: 8px;
+        background-color: #b2dba1;
+        cursor: pointer;
+    }
+.signBlock {
+    width: 300px;
+}
+.loginForm input {
+    margin: 10px auto;
+}
+
+.rowPadding {
+    padding: 15px;
+}
+.rowMargin {
+    margin: 15px auto;
+}
+.disablePadding{
+    padding: 0;
+}

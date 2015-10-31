@@ -16,6 +16,7 @@ socket_listen($socket);
 
 //create & add listning socket to the list
 $clients = array($socket);
+$allClients = [];
 
 //start endless loop, so that our script doesn't stop
 while (true) {
@@ -49,13 +50,35 @@ while (true) {
         {
             $received_text = unmask($buf); //unmask data
             $tst_msg = json_decode($received_text); //json decode
-            $user_name = $tst_msg->name; //sender name
-            $user_message = $tst_msg->message; //message text
-            $user_color = $tst_msg->color; //color
+            $user_name = ( isset($tst_msg->name) ) ? $tst_msg->name : ''; //sender name
+            $user_message = ( isset($tst_msg->message) ) ? $tst_msg->message : ''; //message text
+            $user_color = ( isset($tst_msg->color) ) ? $tst_msg->color : ''; //color
 
-            //prepare data to be sent to client
-            $response_text = mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color)));
-            send_message($response_text); //send data
+            if(isset($tst_msg->type) && !empty($tst_msg->type))
+            {
+                echo $tst_msg->id."\n\r";
+                $allClients[$tst_msg->id] = $changed_socket;
+                print_r($allClients);
+                //print_r($clients);
+                $keys = array_keys($allClients);
+                $response_text = mask(json_encode(array('type' => 'usermsg', 'name' => $user_name, 'message' => $user_message, 'online' => $keys, 'color' => $user_color)));
+                send_message($response_text); //send data
+            }
+            else {
+                //prepare data to be sent to client
+                $keys = array_keys($allClients);
+                //echo("to: " . $tst_msg->to);
+                $to = ( isset($tst_msg->to) ? $tst_msg->to : 0);
+                if($to > 0) {
+                    $user_message = $user_message . " | for user #" . $tst_msg->to;
+                    $response_text = mask(json_encode(array('type' => 'usermsg', 'name' => $user_name, 'message' => $user_message, 'online' => $keys, 'color' => $user_color)));
+                    send_message_to($response_text, $allClients[$tst_msg->to]);
+                }
+                else {
+                    $response_text = mask(json_encode(array('type' => 'usermsg', 'name' => $user_name, 'message' => $user_message, 'online' => $keys, 'color' => $user_color)));
+                    send_message($response_text); //send data
+                }
+            }
             break 2; //exist this loop
         }
 
@@ -65,9 +88,12 @@ while (true) {
             $found_socket = array_search($changed_socket, $clients);
             socket_getpeername($changed_socket, $ip);
             unset($clients[$found_socket]);
-
+            $key = array_search($changed_socket, $allClients);
+            print $allClients[$key] . " DISCONNECT";
+            unset($allClients[$key]);
             //notify all users about disconnected connection
-            $response = mask(json_encode(array('type'=>'system', 'message'=>$ip.' disconnected')));
+            $keys = array_keys($allClients);
+            $response = mask(json_encode(array('type'=>'system', 'message'=>$ip.' disconnected', 'online' => $keys)));
             send_message($response);
         }
     }
@@ -78,10 +104,17 @@ socket_close($sock);
 function send_message($msg)
 {
     global $clients;
+    //print_r($clients);
     foreach($clients as $changed_socket)
     {
         @socket_write($changed_socket,$msg,strlen($msg));
     }
+    return true;
+}
+
+function send_message_to($msg, $res)
+{
+    @socket_write($res,$msg,strlen($msg));
     return true;
 }
 
